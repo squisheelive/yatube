@@ -1,0 +1,21 @@
+{% extends "includes/base.html" %}
+{% block title %}Страница пользователя @{{ author.username}} {% endblock %}
+{% block header %}Страница пользователя @{{ author.username}} {% endblock %}
+{% block content %}
+    
+  <main role="main" class="container">
+    {% include "includes/user_card.html" %}
+      {% if author.posts.exists %}
+      
+    <div class="col-md-9">
+      {% for post in page %}
+        {% include "includes/post_item.html" with post=post %}
+      {% endfor %}
+    </div>
+
+  {% include "includes/paginator.html" %}
+  </main>
+    {% else %}
+    <h5>У автора еще нет ни одной записи</h5>
+    {% endif %}
+{% endblock %}
