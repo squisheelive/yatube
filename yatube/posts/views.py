@@ -6,7 +6,7 @@ from django.views.decorators.cache import cache_page
 from yatube.settings import PAGE_SIZE
 
 from .forms import CommentForm, PostForm
-from .models import Group, Post, User
+from .models import Follow, Group, Post, User
 
 
 @cache_page(20)
@@ -38,7 +38,6 @@ def profile(request, username):
         'page': page,
         'author': author,
         'post': post,
-        'func': 'profile'
     }
     return render(request, 'profile.html', context)
 
@@ -49,7 +48,6 @@ def post_view(request, username, post_id):
     context = {
         'author': author,
         'post': post,
-        'func': 'post_view'
     }
     return render(request, 'post.html', context)
 
@@ -91,6 +89,32 @@ def add_comment(request, username, post_id):
         return redirect('post', username=username, post_id=post_id)
     return render(request, 'comments.html', {'form': form})
 
+
+@login_required
+def follow_index(request):
+    user = request.user
+    post_list = user.
+    paginator = Paginator(post_list, PAGE_SIZE)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, 'follow.html', {'page': page})
+
+@login_required
+def profile_follow(request, username):
+    author = User.objects.get(username=username)
+    Follow.objects.create(
+        user=request.user,
+        author=author)
+    return redirect('follow_index')
+
+@login_required
+def profile_unfollow(request, username):
+    author = User.objects.get(username=username)
+    followship = Follow.objects.get(
+        user=request.user,
+        author=author)
+    followship.delete()
+    return redirect('index')        
 
 def page_not_found(request, exception):
     return render(
