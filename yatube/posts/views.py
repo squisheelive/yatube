@@ -93,11 +93,15 @@ def add_comment(request, username, post_id):
 @login_required
 def follow_index(request):
     user = request.user
-    post_list = user.
+    follow_list = user.follower.all()
+    post_list = []
+    for follow in follow_list:
+        post_list.extend(follow.author.posts.all())
     paginator = Paginator(post_list, PAGE_SIZE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'follow.html', {'page': page})
+
 
 @login_required
 def profile_follow(request, username):
@@ -107,6 +111,7 @@ def profile_follow(request, username):
         author=author)
     return redirect('follow_index')
 
+
 @login_required
 def profile_unfollow(request, username):
     author = User.objects.get(username=username)
@@ -114,7 +119,8 @@ def profile_unfollow(request, username):
         user=request.user,
         author=author)
     followship.delete()
-    return redirect('index')        
+    return redirect('index')
+
 
 def page_not_found(request, exception):
     return render(
