@@ -31,6 +31,9 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     post_list = author.posts.all()
     post = author.posts.first
+    following = False
+    if request.user.follower.filter(author=author):
+        following = True
     paginator = Paginator(post_list, PAGE_SIZE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -38,6 +41,7 @@ def profile(request, username):
         'page': page,
         'author': author,
         'post': post,
+        'following': following
     }
     return render(request, 'profile.html', context)
 
@@ -45,9 +49,13 @@ def profile(request, username):
 def post_view(request, username, post_id):
     post = get_object_or_404(Post, author__username=username, pk=post_id)
     author = post.author
+    following = False
+    if request.user.follower.filter(author=author):
+        following = True
     context = {
         'author': author,
         'post': post,
+        'following': following
     }
     return render(request, 'post.html', context)
 
@@ -94,9 +102,10 @@ def add_comment(request, username, post_id):
 def follow_index(request):
     user = request.user
     follow_list = user.follower.all()
-    post_list = []
-    for follow in follow_list:
-        post_list.extend(follow.author.posts.all())
+    author_list = []
+    for i in follow_list:
+        author_list.append(i.author)
+    post_list = Post.objects.filter(author__in=author_list)
     paginator = Paginator(post_list, PAGE_SIZE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)

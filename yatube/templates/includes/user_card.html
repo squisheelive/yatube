@@ -23,7 +23,7 @@
             </li>
           </ul>
           <li class="list-group-item">
-            {% if following %}
+            {% if following  %}
               <a
                 class="btn btn-lg btn-light"
                 href="{% url 'profile_unfollow' post.author.username %}" role="button">
