@@ -6,17 +6,19 @@ from django import forms
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from posts.models import Group, Post, User
+from posts.models import Follow, Group, Post, User
 from yatube.settings import PAGE_SIZE
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class ViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
         cls.author = User.objects.create(username='Test-user')
         cls.group = Group.objects.create(
             title='Тестовый заголовок',
@@ -45,7 +47,7 @@ class ViewsTest(TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         cache.clear()
@@ -192,6 +194,40 @@ class ViewsTest(TestCase):
         new_post.delete()
         response = self.guest_client.get(reverse('index'))
         self.assertIn(b'New test text', response.content)
+
+    def test_authorized_client_profile_follow(self):
+        self.authorized_client.get(reverse(
+            'profile_follow', kwargs={'username': ViewsTest.author.username}))
+        followship = Follow.objects.get(user=self.user)
+        self.assertEqual(followship.author, ViewsTest.author)
+
+    def test_authorized_client_profile_unfollow(self):
+        Follow.objects.create(
+            user=self.user,
+            author=ViewsTest.author)
+        self.authorized_client.get(reverse(
+            'profile_unfollow',
+            kwargs={'username': ViewsTest.author.username}))
+        self.assertEqual(self.user.follower.count(), 0)
+
+    def test_new_post_shows_to_follower(self):
+        Follow.objects.create(
+            user=self.user,
+            author=ViewsTest.author)
+        new_post = Post.objects.create(
+            text='Новый тестовый текст',
+            author=ViewsTest.author)
+        response = self.authorized_client.get(reverse('follow_index'))
+        last_post = response.context['page'].object_list[0]
+        self.assertEqual(last_post, new_post)
+
+    def test_new_post_not_shows_to_unfollower(self):
+        new_post = Post.objects.create(
+            text='Новый тестовый текст',
+            author=ViewsTest.author)
+        response = self.authorized_client.get(reverse('follow_index'))
+        last_post = response.context['page'].object_list.first
+        self.assertNotEqual(last_post, new_post)
 
 
 class PaginationTest(TestCase):

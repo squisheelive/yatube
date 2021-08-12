@@ -3,16 +3,18 @@ import tempfile
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from posts.models import Group, Post, User
+from posts.models import Comment, Group, Post, User
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class FormsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
         cls.group = Group.objects.create(
             title='Тестовый заголовок',
             slug='test-slug',
@@ -22,7 +24,7 @@ class FormsTest(TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         self.guest_client = Client()
@@ -81,3 +83,22 @@ class FormsTest(TestCase):
                 'username': self.user.username,
                 'post_id': pk}))
         self.assertEqual(post.text, 'Тестовый Текст')
+
+    def test_comment_post(self):
+        author = User.objects.create(username='Test-user-2')
+        post = Post.objects.create(
+            text='Новый тестовый текст',
+            author=author)
+        comment_count = post.comments.count()
+        response = self.authorized_client.post(
+            reverse('add_comment', kwargs={
+                'username': author.username,
+                'post_id': post.pk}),
+            data={'text': 'тестовый комментарий'},
+            follow=True,
+        )
+        self.assertRedirects(response, reverse(
+            'post', kwargs={
+                'username': author.username,
+                'post_id': post.pk}))
+        self.assertEqual(Comment.objects.count(), comment_count + 1)

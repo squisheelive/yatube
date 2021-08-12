@@ -32,7 +32,9 @@ def profile(request, username):
     post_list = author.posts.all()
     post = author.posts.first
     following = False
-    if request.user.follower.filter(author=author):
+    if request.user.is_anonymous is True:
+        pass
+    elif request.user.follower.filter(author=author):
         following = True
     paginator = Paginator(post_list, PAGE_SIZE)
     page_number = request.GET.get('page')
@@ -41,7 +43,7 @@ def profile(request, username):
         'page': page,
         'author': author,
         'post': post,
-        'following': following
+        'following': following,
     }
     return render(request, 'profile.html', context)
 
@@ -49,13 +51,17 @@ def profile(request, username):
 def post_view(request, username, post_id):
     post = get_object_or_404(Post, author__username=username, pk=post_id)
     author = post.author
+    form = CommentForm(request.POST or None)
     following = False
-    if request.user.follower.filter(author=author):
+    if request.user.is_anonymous is True:
+        pass
+    elif request.user.follower.filter(author=author):
         following = True
     context = {
         'author': author,
         'post': post,
-        'following': following
+        'following': following,
+        'form': form
     }
     return render(request, 'post.html', context)
 
@@ -115,9 +121,16 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author = User.objects.get(username=username)
-    Follow.objects.create(
-        user=request.user,
-        author=author)
+    user = request.user
+    if user != author:
+        followship = Follow.objects.filter(
+            user=user,
+            author=author)
+        followship_count = followship.count()
+        if followship_count == 0:
+            Follow.objects.create(
+                user=request.user,
+                author=author)
     return redirect('follow_index')
 
 

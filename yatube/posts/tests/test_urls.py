@@ -107,3 +107,8 @@ class URLTests(TestCase):
     def test_wrong_url_404(self):
         response = self.guest_client.get('/page/which/not/exist')
         self.assertEqual(response.status_code, 404)
+
+    def test_anonymous_comment_redirect(self):
+        response = self.guest_client.get(
+            f'/{URLTests.author.username}/{URLTests.pk}/comment/')
+        self.assertEqual(response.status_code, 404)
