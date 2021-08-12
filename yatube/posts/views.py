@@ -30,7 +30,6 @@ def group_posts(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     post_list = author.posts.all()
-    post = author.posts.first
     following = False
     if request.user.is_anonymous is True:
         pass
@@ -42,7 +41,6 @@ def profile(request, username):
     context = {
         'page': page,
         'author': author,
-        'post': post,
         'following': following,
     }
     return render(request, 'profile.html', context)

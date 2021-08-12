@@ -5,8 +5,8 @@
             <div class="h2">
               {{ author.get_full_name }}
             </div>
-            <a name="post_{{ post.id }}" href="{% url 'profile' post.author.username %}">
-        <strong class="d-block text-gray-dark">@{{ post.author }}</strong>
+            <a href="{% url 'profile' author.username %}">
+        <strong class="d-block text-gray-dark">@{{ author }}</strong>
       </a>
           </div>
           <ul class="list-group list-group-flush">
@@ -27,13 +27,13 @@
               {% if following  %}
                 <a
                   class="btn btn-lg btn-light"
-                  href="{% url 'profile_unfollow' post.author.username %}" role="button">
+                  href="{% url 'profile_unfollow' author.username %}" role="button">
                   Отписаться
                 </a>
               {% else %}
                 <a
                   class="btn btn-lg btn-primary"
-                  href="{% url 'profile_follow' post.author.username %}" role="button">
+                  href="{% url 'profile_follow' author.username %}" role="button">
                   Подписаться
                 </a>
               {% endif %}
