@@ -33,8 +33,8 @@ def profile(request, username):
     following = False
     if request.user.is_anonymous is True:
         pass
-    elif request.user.follower.filter(author=author):
-        following = True
+    elif request.user.is_authenticated is True:
+        following = request.user.follower.filter(author=author).exists()
     paginator = Paginator(post_list, PAGE_SIZE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -75,6 +75,7 @@ def new_post(request):
     return render(request, 'new.html', {'form': form, 'func': 'new_post'})
 
 
+@login_required
 def post_edit(request, username, post_id):
     if request.user.username == username:
         post = get_object_or_404(Post, author__username=username, pk=post_id)
@@ -106,12 +107,7 @@ def add_comment(request, username, post_id):
 
 @login_required
 def follow_index(request):
-    user = request.user
-    follow_list = user.follower.all()
-    author_list = []
-    for i in follow_list:
-        author_list.append(i.author)
-    post_list = Post.objects.filter(author__in=author_list)
+    post_list = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(post_list, PAGE_SIZE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -123,14 +119,9 @@ def profile_follow(request, username):
     author = User.objects.get(username=username)
     user = request.user
     if user != author:
-        followship = Follow.objects.filter(
+        Follow.objects.get_or_create(
             user=user,
             author=author)
-        followship_count = followship.count()
-        if followship_count == 0:
-            Follow.objects.create(
-                user=request.user,
-                author=author)
     return redirect('follow_index')
 
 

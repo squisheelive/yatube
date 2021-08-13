@@ -81,13 +81,6 @@ class URLTests(TestCase):
             f'/{URLTests.author.username}/{URLTests.pk}/edit/')
         self.assertTemplateUsed(response, 'new.html')
 
-    def test_post_page_edit_anonymous_redirect_post_page(self):
-        response = self.guest_client.get(
-            f'/{URLTests.author.username}/{URLTests.pk}/edit/',
-            follow=True)
-        self.assertRedirects(
-            response, f'/{URLTests.author.username}/{URLTests.pk}/')
-
     def test_post_page_edit_non_author_redirect_post_page(self):
         new_user = User.objects.create(username='new_user')
         non_author = Client()
