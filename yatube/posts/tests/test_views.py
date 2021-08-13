@@ -193,7 +193,11 @@ class ViewsTest(TestCase):
         self.guest_client.get(reverse('index'))
         new_post.delete()
         response = self.guest_client.get(reverse('index'))
-        self.assertIn(b'New test text', response.content)
+        self.assertIn(new_post.text, str(response.content))
+        cache.clear()
+        response = self.guest_client.get(reverse('index'))
+        last_post = response.context['page'].object_list[0]
+        self.assertNotEqual(last_post, new_post)
 
     def test_authorized_client_profile_follow(self):
         self.authorized_client.get(reverse(

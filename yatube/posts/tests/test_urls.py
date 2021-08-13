@@ -1,6 +1,6 @@
 from django.core.cache import cache
 from django.test import Client, TestCase
-from posts.models import Group, Post, User
+from posts.models import Comment, Follow, Group, Post, User
 
 
 class URLTests(TestCase):
@@ -8,6 +8,7 @@ class URLTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.author = User.objects.create(username='Test-user')
+        cls.user = User.objects.create(username='Test-user-2')
         cls.group = Group.objects.create(
             title='Тестовый заголовок',
             slug='test-slug'
@@ -17,11 +18,25 @@ class URLTests(TestCase):
             author=cls.author,
             group=cls.group
         )
-        cls.pk = URLTests.author.posts.first().pk
+        cls.pk = cls.post.pk
+        cls.comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.user,
+            text='Тестовый комментарий'
+        )
+        cls.follow = Follow.objects.create(
+            user=cls.user,
+            author=cls.author
+        )
         cls.templates_url_names = {
             'index.html': '/',
             'group.html': f'/group/{URLTests.group.slug}/',
             'new.html': '/new/',
+            'post.html': f'/{URLTests.author.username}/{URLTests.pk}/',
+            'profile.html': f'/{URLTests.author.username}/',
+            'follow.html': '/follow/',
+            'comments.html': (
+                f'/{URLTests.author.username}/{URLTests.pk}/comment/')
         }
 
     def setUp(self):
@@ -101,7 +116,20 @@ class URLTests(TestCase):
         response = self.guest_client.get('/page/which/not/exist')
         self.assertEqual(response.status_code, 404)
 
-    def test_anonymous_comment_redirect(self):
+    def test_comment_page_exist_authorized(self):
+        response = self.authorized_client.get(
+            f'/{URLTests.author.username}/{URLTests.pk}/comment/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_comment_page_redirect_anonymous(self):
         response = self.guest_client.get(
             f'/{URLTests.author.username}/{URLTests.pk}/comment/')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 302)
+
+    def test_follow_page_exists_authorized(self):
+        response = self.authorized_client.get('/follow/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_follow_page_redirect_anonymous(self):
+        response = self.guest_client.get('/follow/')
+        self.assertEqual(response.status_code, 302)
