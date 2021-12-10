@@ -31,7 +31,9 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     post_list = author.posts.all()
     following = False
-    if request.user.is_authenticated:
+    if request.user.is_anonymous is True:
+        pass
+    elif request.user.is_authenticated is True:
         following = request.user.follower.filter(author=author).exists()
     paginator = Paginator(post_list, PAGE_SIZE)
     page_number = request.GET.get('page')

@@ -11,7 +11,6 @@ from django.urls import reverse
 from posts.models import Follow, Group, Post, User
 from yatube.settings import PAGE_SIZE
 
-
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
@@ -78,7 +77,7 @@ class ViewsTest(TestCase):
         self.assertEqual(last_post.pub_date.date(), today)
         self.assertEqual(last_post.author, ViewsTest.author)
         self.assertEqual(last_post.group, ViewsTest.group)
-        self.assertEqual(last_post.image, f'posts/{ViewsTest.uploaded.name}')
+        self.assertEqual(last_post.image.read(), ViewsTest.small_gif)
 
     def test_group_page_show_correct_context(self):
         response = self.guest_client.get(
@@ -89,7 +88,7 @@ class ViewsTest(TestCase):
         self.assertEqual(last_post.pub_date.date(), today)
         self.assertEqual(last_post.author, ViewsTest.author)
         self.assertEqual(last_post.group, ViewsTest.group)
-        self.assertEqual(last_post.image, f'posts/{ViewsTest.uploaded.name}')
+        self.assertEqual(last_post.image.read(), ViewsTest.small_gif)
 
     def test_profile_page_show_correct_context(self):
         response = self.guest_client.get(
@@ -100,7 +99,7 @@ class ViewsTest(TestCase):
         self.assertEqual(last_post.pub_date.date(), today)
         self.assertEqual(last_post.author, ViewsTest.author)
         self.assertEqual(last_post.group, ViewsTest.group)
-        self.assertEqual(last_post.image, f'posts/{ViewsTest.uploaded.name}')
+        self.assertEqual(last_post.image.read(), ViewsTest.small_gif)
 
     def test_post_page_show_correct_context(self):
         pk = ViewsTest.author.posts.first().pk
@@ -116,7 +115,7 @@ class ViewsTest(TestCase):
         self.assertEqual(author, ViewsTest.author)
         self.assertEqual(post.group, ViewsTest.group)
         self.assertEqual(post.pub_date.date(), today)
-        self.assertEqual(post.image, f'posts/{ViewsTest.uploaded.name}')
+        self.assertEqual(post.image.read(), ViewsTest.small_gif)
 
     def test_new_post_page_show_correct_context(self):
         response = self.authorized_client.get(reverse('new_post'))
