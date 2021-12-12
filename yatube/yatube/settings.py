@@ -12,6 +12,18 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
+import environ
+import sentry_sdk
+
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="https://923ee7096da94b2b86453fba6bdd0a5c@o1089245.ingest.sentry.io/6104214",
+    integrations=[DjangoIntegration()],
+)
+env = environ.Env()
+environ.Env.read_env()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -26,6 +38,9 @@ SECRET_KEY = '18_7m@dy$hyr38-%oynv82f$p9ev*jr10#chwtl!puktuc5(04'
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    "51.250.8.175",
+    "squishee.ga",
+    "www.squishee.ga",
     "localhost",
     "127.0.0.1",
     "[::1]",
@@ -86,10 +101,7 @@ WSGI_APPLICATION = 'yatube.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': env.db(),
 }
 
 
